@@ -100,31 +100,3 @@ curl -X DELETE http://localhost:3000/api/cron/cleanup
 | `MINIO_ACCESS_KEY` | `myfilesadmin`       | MinIO root user               |
 | `MINIO_SECRET_KEY` | `myfilespassword123` | MinIO root password           |
 | `MINIO_BUCKET_NAME`| `myfiles-bucket`     | Bucket name for file storage  |
-
-## Deployment (Railway)
-
-Railway is recommended because it can host the Next.js app, SQLite database, and MinIO container together.
-
-1. Push this repo to GitHub.
-2. Create a new project on [Railway](https://railway.app/).
-3. Add a **New Service → Docker** for MinIO using the `docker-compose.yml`.
-4. Add another **New Service → GitHub Repo** pointing to this repo.
-5. Set the environment variables (update `MINIO_ENDPOINT` to point to the MinIO service's internal hostname).
-6. Railway auto-deploys on push.
-
-> **Why not Vercel?** Vercel is serverless and cannot host a persistent MinIO container or a writable SQLite database.
-
-## Custom UI Components
-
-Reusable, accessible components are in `components/ui/index.tsx`:
-
-- **Stepper** – numeric input with +/− buttons, keyboard arrows
-- **Slider** – draggable range slider with pointer & keyboard support
-- **Toggle** – switch with `role="switch"` and keyboard activation
-- **SelectMenu** – dropdown with `role="combobox"`, arrow keys, focus management
-
-All components support Tab navigation, focus-visible outlines, and ARIA attributes.
-
-## License
-
-MIT
