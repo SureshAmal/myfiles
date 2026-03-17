@@ -22,11 +22,15 @@ function getMinioConfig(
     !normalizedUrl.startsWith("[") &&
     normalizedUrl.split(":").length > 1;
 
-  const endPoint = normalizedUrl?.split(":")[0] || "localhost";
+  if (!normalizedUrl) {
+    throw new Error(`Missing required MinIO env: ${endpointEnvName}`);
+  }
+
+  const endPoint = normalizedUrl.split(":")[0];
   const port = process.env[portEnvName]
     ? parseInt(process.env[portEnvName]!, 10)
     : hasExplicitPort
-      ? parseInt(normalizedUrl!.split(":")[1], 10)
+      ? parseInt(normalizedUrl.split(":")[1], 10)
       : defaultPort;
   const useSSL =
     process.env[sslEnvName] === "true" ||
@@ -65,8 +69,16 @@ export const minioClient =
     endPoint: internalConfig.endPoint,
     port: internalConfig.port,
     useSSL: internalConfig.useSSL,
-    accessKey: process.env.MINIO_ACCESS_KEY || "myfilesadmin",
-    secretKey: process.env.MINIO_SECRET_KEY || "myfilespassword123",
+    accessKey:
+      process.env.MINIO_ACCESS_KEY ||
+      (() => {
+        throw new Error("Missing required MinIO env: MINIO_ACCESS_KEY");
+      })(),
+    secretKey:
+      process.env.MINIO_SECRET_KEY ||
+      (() => {
+        throw new Error("Missing required MinIO env: MINIO_SECRET_KEY");
+      })(),
     region: process.env.MINIO_REGION || "ap-southeast-1",
     pathStyle: true,
   });
@@ -77,8 +89,16 @@ export const minioPublicClient =
     endPoint: publicConfig.endPoint,
     port: publicConfig.port,
     useSSL: publicConfig.useSSL,
-    accessKey: process.env.MINIO_ACCESS_KEY || "myfilesadmin",
-    secretKey: process.env.MINIO_SECRET_KEY || "myfilespassword123",
+    accessKey:
+      process.env.MINIO_ACCESS_KEY ||
+      (() => {
+        throw new Error("Missing required MinIO env: MINIO_ACCESS_KEY");
+      })(),
+    secretKey:
+      process.env.MINIO_SECRET_KEY ||
+      (() => {
+        throw new Error("Missing required MinIO env: MINIO_SECRET_KEY");
+      })(),
     region: process.env.MINIO_REGION || "ap-southeast-1",
     pathStyle: true,
   });
