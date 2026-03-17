@@ -37,7 +37,8 @@ export async function initializeMinio() {
         console.error('Error creating bucket:', createError)
       }
     } else {
-      console.error('Error checking bucket:', error)
+      console.error('Error checking bucket:', error.name, error.message)
+      console.dir(error, { depth: null })
     }
   }
 }
