@@ -11,7 +11,7 @@ export const minioClient =
     useSSL: process.env.MINIO_USE_SSL === 'true',
     accessKey: process.env.MINIO_ACCESS_KEY || 'myfilesadmin',
     secretKey: process.env.MINIO_SECRET_KEY || 'myfilespassword123',
-    region: 'us-east-1',
+    region: process.env.MINIO_REGION || 'ap-southeast-1',
     pathStyle: true,
   })
 
@@ -24,7 +24,7 @@ export async function initializeMinio() {
   try {
     const exists = await minioClient.bucketExists(BUCKET_NAME)
     if (!exists) {
-      await minioClient.makeBucket(BUCKET_NAME, 'us-east-1')
+      await minioClient.makeBucket(BUCKET_NAME)
       console.log(`Bucket ${BUCKET_NAME} created successfully.`)
 
       // Set bucket policy to allow public read, since we might use presigned URLs or direct links
