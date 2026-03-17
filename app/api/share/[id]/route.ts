@@ -1,0 +1,111 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import * as bcrypt from "bcrypt";
+import { minioClient, BUCKET_NAME } from "@/lib/minio";
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const share = await prisma.share.findUnique({
+      where: { shortId: id },
+      include: { files: true },
+    });
+
+    if (!share) {
+      return NextResponse.json({ error: "Share not found" }, { status: 404 });
+    }
+
+    if (new Date() > share.expiresAt) {
+      return NextResponse.json(
+        { error: "Share has expired" },
+        { status: 410 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        size: share.size,
+        expiresAt: share.expiresAt,
+        files: share.files.map((f: any) => ({
+          id: f.id,
+          name: f.originalName,
+          size: f.size,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Share GET error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { passkey } = await request.json();
+
+    if (!passkey) {
+      return NextResponse.json({ error: "Passkey is required" }, { status: 400 });
+    }
+
+    const share = await prisma.share.findUnique({
+      where: { shortId: id },
+      include: { files: true },
+    });
+
+    if (!share) {
+      return NextResponse.json({ error: "Share not found" }, { status: 404 });
+    }
+
+    if (new Date() > share.expiresAt) {
+      return NextResponse.json(
+        { error: "Share has expired" },
+        { status: 410 }
+      );
+    }
+
+    // Verify Passkey
+    const isMatch = await bcrypt.compare(passkey, share.passkey);
+    if (!isMatch) {
+      return NextResponse.json({ error: "Invalid passkey" }, { status: 401 });
+    }
+
+    // Generate Presigned URLs valid for 1 hour
+    const downloadLinks = await Promise.all(
+      share.files.map(async (file: any) => {
+        const url = await minioClient.presignedGetObject(
+          BUCKET_NAME,
+          file.minioKey,
+          60 * 60 // 1 hour expiry
+        );
+        return {
+          id: file.id,
+          name: file.originalName,
+          url,
+        };
+      })
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: downloadLinks,
+    });
+  } catch (error) {
+    console.error("Share POST error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}

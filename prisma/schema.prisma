@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  sessionId String   @unique // To identify the user (e.g. from cookie)
+  createdAt DateTime @default(now())
+  shares    Share[]
+}
+
+model Share {
+  id        String   @id @default(uuid())
+  shortId   String   @unique
+  passkey   String   // Hashed passkey
+  size      Int      // Total size in bytes (max 100MB per share)
+  createdAt DateTime @default(now())
+  expiresAt DateTime // 12 hours from creation
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files     File[]
+}
+
+model File {
+  id           String   @id @default(uuid())
+  originalName String
+  minioKey     String   @unique // The object key in MinIO
+  size         Int
+  mimeType     String
+  shareId      String
+  share        Share    @relation(fields: [shareId], references: [id], onDelete: Cascade)
+}
