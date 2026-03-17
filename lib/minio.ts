@@ -5,7 +5,8 @@ const globalForMinio = global as unknown as { minioClient: S3Client }
 
 const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http'
 const port = process.env.MINIO_PORT || (process.env.MINIO_USE_SSL === 'true' ? '443' : '9000')
-const endpoint = `${protocol}://${process.env.MINIO_ENDPOINT}:${port}`
+const portStr = port === '443' || port === '80' ? '' : `:${port}`
+const endpoint = `${protocol}://${process.env.MINIO_ENDPOINT}${portStr}`
 
 export const minioClient =
   globalForMinio.minioClient ||
