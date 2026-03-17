@@ -94,9 +94,9 @@ curl -X DELETE http://localhost:3000/api/cron/cleanup
 | Variable           | Default              | Description                   |
 |--------------------|----------------------|-------------------------------|
 | `DATABASE_URL`     | `file:./dev.db`      | SQLite database path          |
-| `MINIO_ENDPOINT`   | `localhost`          | MinIO server host             |
-| `MINIO_PORT`       | `9000`               | MinIO API port                |
-| `MINIO_USE_SSL`    | `false`              | Use HTTPS for MinIO           |
+| `MINIO_ENDPOINT`   | `localhost`          | MinIO server host (leave as `localhost` for Railway) |
+| `MINIO_PORT`       | `9000`               | MinIO API port (leave as `9000` for Railway)         |
+| `MINIO_USE_SSL`    | `false`              | Use HTTPS (leave as `false` for Railway)             |
 | `MINIO_ACCESS_KEY` | `myfilesadmin`       | MinIO root user               |
 | `MINIO_SECRET_KEY` | `myfilespassword123` | MinIO root password           |
 | `MINIO_BUCKET_NAME`| `myfiles-bucket`     | Bucket name for file storage  |
