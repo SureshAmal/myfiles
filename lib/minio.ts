@@ -3,16 +3,43 @@ import { Client } from "minio";
 // Ensure we don't initialize multiple clients in development (hot-reloading)
 const globalForMinio = global as unknown as { minioClient: Client };
 
-// For production (Railway), always connect locally to the MinIO server running in the same container.
-// For local dev, allow environment variables or fallback to localhost.
-const isProd = process.env.NODE_ENV === "production";
+function getMinioConfig() {
+  const rawEndpoint = process.env.MINIO_ENDPOINT?.trim();
+  const normalizedUrl = rawEndpoint
+    ? rawEndpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+    : undefined;
+
+  const hasExplicitPort =
+    normalizedUrl?.includes(":") &&
+    !normalizedUrl.startsWith("[") &&
+    normalizedUrl.split(":").length > 1;
+
+  const endPoint = normalizedUrl?.split(":")[0] || "localhost";
+  const port = process.env.MINIO_PORT
+    ? parseInt(process.env.MINIO_PORT, 10)
+    : hasExplicitPort
+      ? parseInt(normalizedUrl!.split(":")[1], 10)
+      : 9000;
+  const useSSL =
+    process.env.MINIO_USE_SSL === "true" ||
+    rawEndpoint?.startsWith("https://") ||
+    false;
+
+  return {
+    endPoint,
+    port,
+    useSSL,
+  };
+}
+
+const { endPoint, port, useSSL } = getMinioConfig();
 
 export const minioClient =
   globalForMinio.minioClient ||
   new Client({
-    endPoint: process.env.MINIO_ENDPOINT || "localhost",
-    port: process.env.MINIO_PORT ? parseInt(process.env.MINIO_PORT) : 9000,
-    useSSL: process.env.MINIO_USE_SSL === "true",
+    endPoint,
+    port,
+    useSSL,
     accessKey: process.env.MINIO_ACCESS_KEY || "myfilesadmin",
     secretKey: process.env.MINIO_SECRET_KEY || "myfilespassword123",
     region: process.env.MINIO_REGION || "ap-southeast-1",
