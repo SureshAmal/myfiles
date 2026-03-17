@@ -1,10 +1,18 @@
 import { Client } from "minio";
 
 // Ensure we don't initialize multiple clients in development (hot-reloading)
-const globalForMinio = global as unknown as { minioClient: Client };
+const globalForMinio = global as unknown as {
+  minioClient: Client;
+  minioPublicClient: Client;
+};
 
-function getMinioConfig() {
-  const rawEndpoint = process.env.MINIO_ENDPOINT?.trim();
+function getMinioConfig(
+  endpointEnvName: "MINIO_ENDPOINT" | "MINIO_PUBLIC_ENDPOINT",
+  portEnvName: "MINIO_PORT" | "MINIO_PUBLIC_PORT",
+  sslEnvName: "MINIO_USE_SSL" | "MINIO_PUBLIC_USE_SSL",
+  defaultPort: number,
+) {
+  const rawEndpoint = process.env[endpointEnvName]?.trim();
   const normalizedUrl = rawEndpoint
     ? rawEndpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "")
     : undefined;
@@ -15,13 +23,13 @@ function getMinioConfig() {
     normalizedUrl.split(":").length > 1;
 
   const endPoint = normalizedUrl?.split(":")[0] || "localhost";
-  const port = process.env.MINIO_PORT
-    ? parseInt(process.env.MINIO_PORT, 10)
+  const port = process.env[portEnvName]
+    ? parseInt(process.env[portEnvName]!, 10)
     : hasExplicitPort
       ? parseInt(normalizedUrl!.split(":")[1], 10)
-      : 9000;
+      : defaultPort;
   const useSSL =
-    process.env.MINIO_USE_SSL === "true" ||
+    process.env[sslEnvName] === "true" ||
     rawEndpoint?.startsWith("https://") ||
     false;
 
@@ -32,22 +40,53 @@ function getMinioConfig() {
   };
 }
 
-const { endPoint, port, useSSL } = getMinioConfig();
+const internalConfig = getMinioConfig(
+  "MINIO_ENDPOINT",
+  "MINIO_PORT",
+  "MINIO_USE_SSL",
+  9000,
+);
+
+const publicConfig =
+  process.env.MINIO_PUBLIC_ENDPOINT ||
+  process.env.MINIO_PUBLIC_PORT ||
+  process.env.MINIO_PUBLIC_USE_SSL
+    ? getMinioConfig(
+        "MINIO_PUBLIC_ENDPOINT",
+        "MINIO_PUBLIC_PORT",
+        "MINIO_PUBLIC_USE_SSL",
+        443,
+      )
+    : internalConfig;
 
 export const minioClient =
   globalForMinio.minioClient ||
   new Client({
-    endPoint,
-    port,
-    useSSL,
+    endPoint: internalConfig.endPoint,
+    port: internalConfig.port,
+    useSSL: internalConfig.useSSL,
     accessKey: process.env.MINIO_ACCESS_KEY || "myfilesadmin",
     secretKey: process.env.MINIO_SECRET_KEY || "myfilespassword123",
     region: process.env.MINIO_REGION || "ap-southeast-1",
     pathStyle: true,
   });
 
-if (process.env.NODE_ENV !== "production")
+export const minioPublicClient =
+  globalForMinio.minioPublicClient ||
+  new Client({
+    endPoint: publicConfig.endPoint,
+    port: publicConfig.port,
+    useSSL: publicConfig.useSSL,
+    accessKey: process.env.MINIO_ACCESS_KEY || "myfilesadmin",
+    secretKey: process.env.MINIO_SECRET_KEY || "myfilespassword123",
+    region: process.env.MINIO_REGION || "ap-southeast-1",
+    pathStyle: true,
+  });
+
+if (process.env.NODE_ENV !== "production") {
   globalForMinio.minioClient = minioClient;
+  globalForMinio.minioPublicClient = minioPublicClient;
+}
 
 export const BUCKET_NAME = process.env.MINIO_BUCKET_NAME || "myfiles-bucket";
 

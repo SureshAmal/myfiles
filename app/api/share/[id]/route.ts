@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import * as bcrypt from "bcrypt";
-import { minioClient, BUCKET_NAME } from "@/lib/minio";
+import { minioPublicClient, BUCKET_NAME } from "@/lib/minio";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -20,10 +20,7 @@ export async function GET(
     }
 
     if (new Date() > share.expiresAt) {
-      return NextResponse.json(
-        { error: "Share has expired" },
-        { status: 410 }
-      );
+      return NextResponse.json({ error: "Share has expired" }, { status: 410 });
     }
 
     return NextResponse.json({
@@ -31,7 +28,7 @@ export async function GET(
       data: {
         size: share.size,
         expiresAt: share.expiresAt,
-        files: share.files.map((f: any) => ({
+        files: share.files.map((f) => ({
           id: f.id,
           name: f.originalName,
           size: f.size,
@@ -42,21 +39,24 @@ export async function GET(
     console.error("Share GET error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const { passkey } = await request.json();
 
     if (!passkey) {
-      return NextResponse.json({ error: "Passkey is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Passkey is required" },
+        { status: 400 },
+      );
     }
 
     const share = await prisma.share.findUnique({
@@ -69,10 +69,7 @@ export async function POST(
     }
 
     if (new Date() > share.expiresAt) {
-      return NextResponse.json(
-        { error: "Share has expired" },
-        { status: 410 }
-      );
+      return NextResponse.json({ error: "Share has expired" }, { status: 410 });
     }
 
     // Verify Passkey
@@ -83,21 +80,21 @@ export async function POST(
 
     // Generate Presigned URLs valid for 1 hour
     const downloadLinks = await Promise.all(
-      share.files.map(async (file: any) => {
-        const url = await minioClient.presignedGetObject(
+      share.files.map(async (file) => {
+        const url = await minioPublicClient.presignedGetObject(
           BUCKET_NAME,
           file.minioKey,
           60 * 60, // 1 hour expiry
           {
             "response-content-disposition": `attachment; filename="${file.originalName}"`,
-          }
+          },
         );
         return {
           id: file.id,
           name: file.originalName,
           url,
         };
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -108,7 +105,7 @@ export async function POST(
     console.error("Share POST error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
