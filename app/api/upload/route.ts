@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       data: {
         shortId,
         passkey: hashedPasskey,
+        rawPasskey: rawPasskey,
         size: batchSize,
         expiresAt,
         userId: user.id,

@@ -30,57 +30,59 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b;
-
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
+  /* 1. Background */
+  --background: #FEF3C7; /* Soft Cream */
+  /* 2. Foreground / Text / Border */
+  --foreground: #1E1B4B; /* Deep Navy */
+  /* 3. Primary */
+  --primary: #EA580C; /* Vibrant Orange */
+  --primary-foreground: #FEF3C7;
+  /* 4. Secondary */
+  --secondary: #DB2777; /* Hot Pink */
+  --secondary-foreground: #FEF3C7;
+  /* 5. Accent */
+  --accent: #0D9488; /* Teal */
+  --accent-foreground: #FEF3C7;
   
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
+  /* Variations using the 5 colors */
+  --muted: #FDE68A;
+  --muted-foreground: #4338CA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FEF3C7;
+  --border: #1E1B4B;
+  --input: #1E1B4B;
+  --ring: #EA580C;
   
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #18181b;
-  
-  --radius-sm: 0.3rem;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
   --radius-full: 9999px;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
+  /* 1. Background */
+  --background: #1E1B4B; /* Deep Navy */
+  /* 2. Foreground / Text / Border */
+  --foreground: #FEF3C7; /* Soft Cream */
+  /* 3. Primary */
+  --primary: #F59E0B; /* Vibrant Yellow */
+  --primary-foreground: #1E1B4B;
+  /* 4. Secondary */
+  --secondary: #EC4899; /* Bright Pink */
+  --secondary-foreground: #1E1B4B;
+  /* 5. Accent */
+  --accent: #06B6D4; /* Cyan */
+  --accent-foreground: #1E1B4B;
   
-  --primary: #fafafa;
-  --primary-foreground: #18181b;
-  
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
-  
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
-  
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #d4d4d8;
+  /* Variations using the 5 colors */
+  --muted: #312E81;
+  --muted-foreground: #FDE68A;
+  --destructive: #F87171;
+  --destructive-foreground: #1E1B4B;
+  --border: #FEF3C7;
+  --input: #FEF3C7;
+  --ring: #F59E0B;
 }
 
 @layer base {

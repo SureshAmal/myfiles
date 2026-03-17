@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import JSZip from "jszip";
 
 interface ShareData {
   size: number;
@@ -26,6 +27,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
   const [passkey, setPasskey] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[] | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   useEffect(() => {
     const fetchShareData = async () => {
@@ -76,6 +78,41 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
+  const handleDownloadAll = async () => {
+    if (!downloadLinks || downloadLinks.length === 0) return;
+    setDownloadingAll(true);
+
+    try {
+      const zip = new JSZip();
+
+      const fetchPromises = downloadLinks.map(async (file) => {
+        const response = await fetch(file.url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const blob = await response.blob();
+        zip.file(file.name, blob);
+      });
+
+      await Promise.all(fetchPromises);
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = window.URL.createObjectURL(zipBlob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `myfiles_${id}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (err) {
+      console.error("Failed to create zip:", err);
+      alert("Failed to create zip file. You can still try accessing files individually.");
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
@@ -93,91 +130,108 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/30 relative">
-      <div className="absolute top-4 right-4">
+    <main className="min-h-screen flex flex-col items-center p-4 md:p-8 md:pt-16 bg-background relative font-sans">
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 border-2 border-border text-border bg-background transition-all">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-md bg-background border border-border rounded-lg p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold mb-1 text-foreground">
-          Download Files
+      <div className="w-full max-w-5xl bg-background border-2 border-border p-8">
+        <h1 className="text-3xl font-extrabold mb-2 uppercase tracking-tight text-foreground border-b-4 border-primary inline-block pb-1">
+          Download
         </h1>
 
         {shareData && (
-          <p className="text-sm text-muted-foreground mb-6">
-            {shareData.files.length} file(s) •{" "}
-            {(shareData.size / 1024 / 1024).toFixed(2)} MB • Expires{" "}
-            {new Date(shareData.expiresAt).toLocaleString()}
+          <p className="text-sm font-bold text-muted-foreground mt-4 uppercase tracking-wide">
+            {shareData.files.length} FILE(S) •{" "}
+            {(shareData.size / 1024 / 1024).toFixed(2)} MB<br />
+            EXPIRES: {new Date(shareData.expiresAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </p>
         )}
 
-        {!downloadLinks ? (
-          <form onSubmit={handleVerify} className="flex flex-col gap-3">
-            <label htmlFor="passkey-input" className="text-sm text-muted-foreground">
-              Enter your passkey to unlock:
-            </label>
-            <input
-              id="passkey-input"
-              type="text"
-              placeholder="e.g. aBcDeFgH"
-              value={passkey}
-              onChange={(e) => setPasskey(e.target.value)}
-              autoComplete="off"
-              className="w-full py-2.5 px-3 border border-border rounded-sm
-                         bg-muted text-foreground font-mono tracking-widest text-center
-                         focus-visible:outline-2 focus-visible:outline-ring"
-            />
-
-            {error && (
-              <div className="text-sm text-destructive" role="alert">
-                {error}
+        <div className="mt-8">
+          {!downloadLinks ? (
+            <form onSubmit={handleVerify} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="passkey-input" className="text-sm font-black uppercase tracking-widest text-foreground">
+                  Access Passcode:
+                </label>
+                <input
+                  id="passkey-input"
+                  type="text"
+                  placeholder="e.g. aBcDeFgH"
+                  value={passkey}
+                  onChange={(e) => setPasskey(e.target.value)}
+                  autoComplete="off"
+                  className="w-full py-4 px-4 border-2 border-border bg-muted/30 text-foreground font-mono text-xl tracking-widest placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:bg-background transition-colors"
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={!passkey || verifying}
-              className="w-full py-2.5 px-4 bg-primary text-primary-foreground
-                         rounded-md font-medium text-sm
-                         hover:opacity-90 transition-opacity
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-            >
-              {verifying ? "Verifying…" : "Unlock Files"}
-            </button>
-          </form>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div className="text-sm font-semibold text-foreground">
-              Files available for download (links expire in 1 hour):
-            </div>
-            <ul className="list-none p-0 m-0 flex flex-col gap-2">
-              {downloadLinks.map((file) => (
-                <li key={file.id}>
-                  <a
-                    href={file.url}
-                    download={file.name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 bg-muted rounded-sm
-                               border border-border text-foreground no-underline
-                               hover:bg-accent hover:text-accent-foreground transition-colors
-                               focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+              {error && (
+                <div className="text-sm font-bold text-destructive bg-destructive/10 border-2 border-destructive p-3 uppercase tracking-wide">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!passkey || verifying}
+                className="w-full py-4 px-6 bg-primary text-primary-foreground font-black uppercase tracking-widest border-2 border-primary hover:bg-foreground hover:border-foreground transition-all disabled:opacity-50 disabled:pointer-events-none mt-2"
+              >
+                {verifying ? "VERIFYING…" : "UNLOCK FILES"}
+              </button>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-primary pl-3">
+                {downloadLinks.length > 1 && (
+                  <button
+                    onClick={handleDownloadAll}
+                    disabled={downloadingAll}
+                    className="w-full md:w-auto text-[11px] sm:text-xs font-black uppercase tracking-widest bg-secondary text-secondary-foreground border-2 border-secondary hover:bg-foreground hover:border-foreground py-2 md:py-3 px-4 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <div className="flex items-center gap-2 overflow-hidden w-full pr-2">
-                       <FileText className="h-4 w-4 text-primary shrink-0 opacity-70" />
-                       <span className="truncate max-w-full">{file.name}</span>
-                    </div>
-                    <span className="text-xs text-primary font-semibold py-1 px-2
-                                     bg-background rounded-sm border border-border shrink-0">
-                      Download
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                    {downloadingAll ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        ZIPPING FILES...
+                      </>
+                    ) : (
+                      "DOWNLOAD ALL (ZIP)"
+                    )}
+                  </button>
+                )}
+              </div>
+              <ul className="list-none p-0 m-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[65vh] overflow-y-auto pr-1">
+                {downloadLinks.map((file) => (
+                  <li key={file.id}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const a = document.createElement('a');
+                        a.href = file.url;
+                        a.download = file.name;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }}
+                      className="w-full group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/30 border-2 border-border text-foreground hover:border-primary transition-all text-left"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden w-full sm:w-auto mb-3 sm:mb-0">
+                        <FileText className="h-6 w-6 text-primary shrink-0" strokeWidth={1.5} />
+                        <span className="font-bold truncate max-w-full text-base" title={file.name}>{file.name}</span>
+                      </div>
+                      <span className="text-xs text-primary-foreground font-black uppercase tracking-wider py-2 px-4 bg-primary border-2 border-primary group-hover:bg-foreground group-hover:border-foreground transition-colors w-full sm:w-auto text-center shrink-0">
+                        DOWNLOAD
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+          )}
+        </div>
       </div>
     </main>
   );

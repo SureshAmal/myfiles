@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { nanoid } from "nanoid";
-import { FileText } from "lucide-react";
+import { FileText, LayoutGrid, List, X, Copy, Loader2, Check } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Share {
   id: string;
   shortId: string;
+  rawPasskey?: string;
   size: number;
   expiresAt: string;
   createdAt: string;
@@ -18,14 +19,11 @@ export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{
-    shortUrlId: string;
-    passkey: string;
-    expiresAt: string;
-  } | null>(null);
 
   const [activeShares, setActiveShares] = useState<Share[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Initialize session ID
   useEffect(() => {
@@ -103,9 +101,8 @@ export default function Home() {
         throw new Error(data.error || "Upload failed");
       }
 
-      setResult(data.data);
-      setFiles([]); // Clear files after successful upload
-      fetchShares(); // Refresh dashboard
+      setFiles([]);
+      fetchShares();
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -139,31 +136,39 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-muted/30 py-12 px-4 gap-8">
-      <div className="w-full max-w-4xl flex justify-between items-center mb-[-1rem]">
-        <h2 className="text-xl font-bold tracking-tight text-foreground opacity-0">.</h2>
-        <ThemeToggle />
+    <main className="min-h-screen flex flex-col items-center bg-background py-16 px-4 md:px-8 gap-10 font-sans">
+      {/* Header */}
+      <div className="w-full max-w-5xl flex justify-between items-end">
+        <div className="flex flex-col">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground uppercase border-b-4 border-primary inline-block pb-1">
+            MyFiles
+          </h1>
+          <p className="text-sm sm:text-base font-bold text-muted-foreground mt-4 uppercase tracking-wide">
+            Share up to 100MB • Links expire in 24h
+          </p>
+        </div>
+        <div className="border-2 border-border text-border mb-1 transition-all bg-background">
+          <ThemeToggle />
+        </div>
       </div>
 
-      {/* Upload Section */}
-      <div className="w-full max-w-xl bg-background border border-border rounded-lg p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold mb-1 text-foreground">
-          MyFiles
-        </h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          Share up to 100MB securely. Links expire in 24 hours.
-        </p>
+      {/* Main Upload / Share area */}
+      <div className="w-full max-w-5xl flex flex-col gap-6">
+        {error && (
+          <div className="text-sm font-bold text-destructive bg-destructive/10 border-2 border-destructive p-4 rounded-none uppercase tracking-wide">
+            {error}
+          </div>
+        )}
 
-        {!result ? (
-          <div className="flex flex-col gap-3">
+        <div className="flex flex-col md:flex-row items-stretch gap-6">
+          <div className="flex-1 flex min-w-0">
             <label
               htmlFor="file-upload"
-              className="block w-full p-4 border border-dashed border-border rounded-md
-                         bg-muted text-muted-foreground text-sm text-center cursor-pointer
-                         hover:bg-accent hover:text-accent-foreground transition-colors
-                         focus-within:outline-2 focus-within:outline-ring"
+              className="group flex flex-1 items-center justify-center p-6 border-2 border-dashed border-border bg-muted/30 text-foreground cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
             >
-              Click to select files (or ZIP archives) or drag them here
+              <span className="font-bold text-lg uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4">
+                Upload
+              </span>
               <input
                 id="file-upload"
                 type="file"
@@ -172,163 +177,169 @@ export default function Home() {
                 className="sr-only"
               />
             </label>
+          </div>
 
-            {files.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <div className="text-sm font-medium text-foreground flex justify-between">
-                  <span>{files.length} file(s) selected</span>
-                  <span className="text-muted-foreground">
-                    {(files.reduce((a, b) => a + b.size, 0) / 1024 / 1024).toFixed(2)} / 100 MB
-                  </span>
-                </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2 rounded-md">
-                  {files.map((file, i) => (
-                    <li
-                      key={`${file.name}-${i}`}
-                      className="flex items-center justify-between p-2 bg-muted/50 rounded-md
-                                 border border-border text-sm"
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="h-4 w-4 text-primary shrink-0 opacity-70" />
-                        <div className="flex flex-col truncate pr-2">
-                          <span className="truncate text-foreground font-medium">{file.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(i)}
-                        className="shrink-0 p-1.5 text-muted-foreground hover:text-destructive
-                                   hover:bg-background rounded-sm transition-colors
-                                   focus-visible:outline-2 focus-visible:outline-ring"
-                        aria-label={`Remove ${file.name}`}
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {error && (
-              <div className="text-sm text-destructive" role="alert">
-                {error}
-              </div>
-            )}
-
+          {files.length > 0 && (
             <button
               onClick={handleUpload}
-              disabled={files.length === 0 || loading}
-              className="w-full py-2.5 px-4 bg-primary text-primary-foreground
-                         rounded-md font-medium text-sm
-                         hover:opacity-90 transition-opacity
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+              disabled={loading}
+              className="flex-shrink-0 px-10 py-4 bg-primary text-primary-foreground font-black uppercase tracking-widest border-2 border-primary transition-all disabled:opacity-50 disabled:pointer-events-none hover:bg-foreground hover:border-foreground"
             >
-              {loading ? "Uploading..." : "Upload Files"}
+              {loading ? "Uploading..." : `Confirm (${files.length})`}
             </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div className="bg-muted p-4 rounded-md border border-border">
-              <div className="mb-2 text-sm font-semibold text-foreground">
-                Keep this Passkey to access files:
+          )}
+        </div>
+
+        {/* Big File Container */}
+        <div className="w-full min-h-[200px] max-h-[65vh] border-2 border-border bg-muted/10 relative text-foreground mt-2 flex flex-col overflow-hidden">
+          {files.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-black text-2xl uppercase tracking-[0.3em] pointer-events-none select-none">
+              [ Drop Files Here ]
+            </div>
+          ) : (
+            <div className="flex flex-col flex-1 min-h-0 relative z-10">
+              <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-3 text-muted-foreground p-3 ">
+                <span>{files.length} Item{files.length !== 1 && 's'}</span>
+                <div className="flex items-center gap-3">
+                  <span>{(files.reduce((a, b) => a + b.size, 0) / 1024 / 1024).toFixed(2)} / 100 MB</span>
+                  <div className="flex border-2 border-border">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"}`}
+                      aria-label="Grid view"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"}`}
+                      aria-label="List view"
+                    >
+                      <List className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="font-mono text-xl tracking-wide text-primary text-center
-                              py-2 px-3 bg-background rounded-sm border border-dashed border-border select-all">
-                {result.passkey}
+
+              <div className="overflow-y-auto flex-1 min-h-0 px-6 sm:px-8 py-4">
+                {viewMode === "grid" ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {files.map((file, i) => (
+                      <div key={`${file.name}-${i}`} className="group relative flex flex-col items-center justify-center p-4 h-36 bg-background border-2 border-border hover:border-primary transition-colors">
+                        <FileText className="h-10 w-10 mb-3 text-primary" strokeWidth={1.5} />
+                        <span className="text-sm font-bold text-center w-full truncate px-1" title={file.name}>{file.name}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1 font-mono font-medium tracking-wide">{(file.size / 1024).toFixed(1)} KB</span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(i)}
+                          className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-destructive-foreground border-2 border-destructive font-black flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-10 hover:bg-secondary hover:border-secondary"
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {files.map((file, i) => (
+                      <div key={`${file.name}-${i}`} className="group flex items-center justify-between p-3 bg-background border-2 border-border hover:border-primary transition-colors">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <FileText className="h-5 w-5 text-primary shrink-0" strokeWidth={1.5} />
+                          <span className="text-sm font-bold truncate" title={file.name}>{file.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-[11px] text-muted-foreground font-mono font-medium">{(file.size / 1024).toFixed(1)} KB</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(i)}
+                            className="h-6 w-6 bg-destructive text-destructive-foreground border-2 border-destructive flex items-center justify-center transition-all hover:bg-secondary hover:border-secondary"
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="text-sm text-muted-foreground">
-              Share Link:
-            </div>
-            <a
-              href={`/s/${result.shortUrlId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-2.5 px-4 bg-secondary text-secondary-foreground
-                         text-center rounded-md font-medium text-sm border border-border
-                         hover:bg-accent hover:text-accent-foreground transition-colors
-                         focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-            >
-              Open Link: /s/{result.shortUrlId}
-            </a>
-
-            <button
-              onClick={() => setResult(null)}
-              className="mt-2 bg-transparent border-none text-muted-foreground
-                         underline cursor-pointer text-sm
-                         focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-            >
-              Upload more files
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Dashboard Section */}
       {activeShares.length > 0 && (
-        <div className="w-full max-w-2xl bg-background border border-border rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">
+        <div className="w-full max-w-5xl mt-6">
+          <h2 className="text-2xl font-black mb-6 uppercase tracking-widest text-foreground border-b-4 border-border inline-block pb-1">
             Active Shares
           </h2>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4 mt-4">
             {activeShares.map((share) => {
               const fileCount = share.files?.length || 0;
-              const formattedDate = new Date(share.createdAt).toLocaleString();
+              const formattedDate = new Date(share.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
               const expiresDate = new Date(share.expiresAt);
               const isExpired = Date.now() > expiresDate.getTime();
 
               return (
                 <div
                   key={share.id}
-                  className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-md border
-                    ${isExpired ? "bg-muted/50 border-border/50 opacity-70" : "bg-card border-border shadow-sm"}
+                  className={`flex flex-col md:flex-row items-start md:items-center justify-between p-5 border-2 
+                    ${isExpired ? "bg-muted/30 border-border/50 opacity-60 grayscale" : "bg-background border-border"}
                   `}
                 >
-                  <div className="flex flex-col gap-1 mb-3 sm:mb-0 w-full sm:w-auto overflow-hidden">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2 mb-4 md:mb-0 w-full md:w-auto overflow-hidden">
+                    <div className="flex items-center gap-3">
                       <a
                         href={`/s/${share.shortId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-primary hover:underline"
+                        className="text-lg font-black text-primary hover:underline decoration-2 underline-offset-4"
                       >
                         /s/{share.shortId}
                       </a>
                       {isExpired ? (
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-sm">
+                        <span className="text-[11px] uppercase font-black tracking-wider text-muted-foreground border-2 border-muted-foreground/30 bg-muted px-2 py-0.5">
                           Expired
                         </span>
                       ) : (
-                        <span className="text-[10px] uppercase font-bold text-success-foreground bg-success/20 px-1.5 py-0.5 rounded-sm">
+                        <span className="text-[11px] uppercase font-black tracking-wider text-accent border-2 border-accent bg-accent/10 px-2 py-0.5">
                           Active
                         </span>
                       )}
+
+                      {!isExpired && share.rawPasskey && (
+                        <span className="text-xs font-mono font-bold bg-muted px-2 py-1 border-2 border-border ml-2 flex items-center gap-2">
+                          <span className="text-primary">{share.rawPasskey}</span>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(share.rawPasskey!)}
+                            className="p-1 hover:bg-background transition-colors"
+                            title="Copy Passcode"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate max-w-md">
-                      {share.files?.map((f) => f.name).join(", ")}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground/70">
-                      {fileCount} file(s) • {(share.size / 1024 / 1024).toFixed(2)} MB • {formattedDate}
+                    <div className="text-xs font-medium text-muted-foreground/80 font-mono tracking-wide mt-1">
+                      {fileCount} ITEM(S) • {(share.size / 1024 / 1024).toFixed(2)} MB • {formattedDate}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  <div className="flex items-center gap-3 self-end md:self-auto shrink-0 mt-3 md:mt-0">
                     <button
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/s/${share.shortId}`)}
-                      className="text-xs font-medium text-secondary-foreground bg-secondary hover:bg-secondary/80 px-3 py-1.5 rounded-sm transition-colors"
+                      className="text-xs font-bold uppercase tracking-wider text-secondary-foreground border-2 border-secondary bg-secondary hover:bg-accent hover:border-accent hover:text-accent-foreground py-2 px-4 transition-colors"
                       title="Copy link"
+                      disabled={isExpired}
                     >
                       Copy Link
                     </button>
                     <button
                       onClick={() => handleDeleteShare(share.id)}
-                      className="text-xs font-medium text-destructive-foreground bg-destructive hover:bg-destructive/90 px-3 py-1.5 rounded-sm transition-colors"
+                      className="text-xs font-bold uppercase tracking-wider text-destructive border-2 border-destructive hover:bg-destructive hover:text-destructive-foreground px-4 py-2 transition-colors"
                       title="Stop sharing"
                     >
                       Delete

@@ -19,9 +19,10 @@ model User {
 
 model Share {
   id        String   @id @default(uuid())
-  shortId   String   @unique
-  passkey   String   // Hashed passkey
-  size      Int      // Total size in bytes (max 100MB per share)
+  shortId    String   @unique
+  passkey    String   // Hashed passkey
+  rawPasskey String?  // Optional unhashed passkey for dashboard viewing
+  size       Int      // Total size in bytes (max 100MB per share)
   createdAt DateTime @default(now())
   expiresAt DateTime // 24 hours from creation
   userId    String
