@@ -11,6 +11,7 @@ export const minioClient =
     useSSL: process.env.MINIO_USE_SSL === 'true',
     accessKey: process.env.MINIO_ACCESS_KEY || 'myfilesadmin',
     secretKey: process.env.MINIO_SECRET_KEY || 'myfilespassword123',
+    region: 'us-east-1',
   })
 
 if (process.env.NODE_ENV !== 'production') globalForMinio.minioClient = minioClient
