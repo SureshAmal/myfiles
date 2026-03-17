@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { minioClient, BUCKET_NAME, initializeMinio } from "@/lib/minio";
+import { getMinioClient, BUCKET_NAME, initializeMinio } from "@/lib/minio";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const sessionId = request.headers.get("x-session-id");
@@ -29,14 +29,17 @@ export async function DELETE(
     });
 
     if (!share || share.userId !== user.id) {
-      return NextResponse.json({ error: "Share not found or unauthorized" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Share not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     // Delete files from MinIO
     await initializeMinio();
     for (const f of share.files) {
       try {
-        await minioClient.removeObject(BUCKET_NAME, f.minioKey);
+        await getMinioClient().removeObject(BUCKET_NAME, f.minioKey);
       } catch (err) {
         console.error(`Failed to delete object from MinIO: ${f.minioKey}`, err);
       }
@@ -52,7 +55,7 @@ export async function DELETE(
     console.error("Delete share error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

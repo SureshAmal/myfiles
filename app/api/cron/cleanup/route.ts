@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { minioClient, BUCKET_NAME } from "@/lib/minio";
+import { getMinioClient, BUCKET_NAME } from "@/lib/minio";
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
     // 1. Find all expired shares
     const expiredShares = await prisma.share.findMany({
@@ -24,11 +24,11 @@ export async function DELETE(request: Request) {
     const shareIdsToDelete = expiredShares.map((share) => share.id);
 
     // 2. Delete files from MinIO
-    for (const share of expiredShares as any[]) {
-      const objectsList: string[] = share.files.map((file: any) => file.minioKey);
-      
+    for (const share of expiredShares) {
+      const objectsList = share.files.map((file) => file.minioKey);
+
       if (objectsList.length > 0) {
-        await minioClient.removeObjects(BUCKET_NAME, objectsList);
+        await getMinioClient().removeObjects(BUCKET_NAME, objectsList);
         deletedFilesCount += objectsList.length;
       }
     }
@@ -49,7 +49,7 @@ export async function DELETE(request: Request) {
     console.error("Cleanup API error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

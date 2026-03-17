@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import * as bcrypt from "bcrypt";
-import { minioPublicClient, BUCKET_NAME } from "@/lib/minio";
+import { getMinioPublicClient, BUCKET_NAME } from "@/lib/minio";
 
 export async function GET(
   request: Request,
@@ -81,7 +81,7 @@ export async function POST(
     // Generate Presigned URLs valid for 1 hour
     const downloadLinks = await Promise.all(
       share.files.map(async (file) => {
-        const url = await minioPublicClient.presignedGetObject(
+        const url = await getMinioPublicClient().presignedGetObject(
           BUCKET_NAME,
           file.minioKey,
           60 * 60, // 1 hour expiry
