@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { minioClient, BUCKET_NAME, initializeMinio } from "@/lib/minio";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function DELETE(
   request: Request,
@@ -36,7 +37,12 @@ export async function DELETE(
     await initializeMinio();
     for (const f of share.files) {
       try {
-        await minioClient.removeObject(BUCKET_NAME, f.minioKey);
+        await minioClient.send(
+          new DeleteObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: f.minioKey,
+          })
+        );
       } catch (err) {
         console.error(`Failed to delete object from MinIO: ${f.minioKey}`, err);
       }
