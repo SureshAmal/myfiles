@@ -19,6 +19,7 @@ export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [activeShares, setActiveShares] = useState<Share[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -60,6 +61,35 @@ export default function Home() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
+      const allFiles = [...files, ...newFiles];
+      const totalSize = allFiles.reduce((acc, file) => acc + file.size, 0);
+
+      if (totalSize > 100 * 1024 * 1024) {
+        setError("Total file size exceeds 100MB limit.");
+        return;
+      }
+
+      setError(null);
+      setFiles(allFiles);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const newFiles = Array.from(e.dataTransfer.files);
       const allFiles = [...files, ...newFiles];
       const totalSize = allFiles.reduce((acc, file) => acc + file.size, 0);
 
@@ -164,10 +194,16 @@ export default function Home() {
           <div className="flex-1 flex min-w-0">
             <label
               htmlFor="file-upload"
-              className="group flex flex-1 items-center justify-center p-6 border-2 border-dashed border-border bg-muted/30 text-foreground cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`group flex flex-1 items-center justify-center p-6 border-2 border-dashed cursor-pointer transition-colors ${isDragging
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-muted/30 text-foreground hover:border-primary hover:bg-muted/50"
+                }`}
             >
-              <span className="font-bold text-lg uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4">
-                Upload
+              <span className="font-bold text-lg uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4 pointer-events-none">
+                {isDragging ? "Drop files here" : "Upload or drag files"}
               </span>
               <input
                 id="file-upload"
@@ -194,7 +230,7 @@ export default function Home() {
         <div className="w-full min-h-[200px] max-h-[65vh] border-2 border-border bg-muted/10 relative text-foreground mt-2 flex flex-col overflow-hidden">
           {files.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-black text-2xl uppercase tracking-[0.3em] pointer-events-none select-none">
-              [ Drop Files Here ]
+              [ No files ]
             </div>
           ) : (
             <div className="flex flex-col flex-1 min-h-0 relative z-10">
@@ -314,11 +350,15 @@ export default function Home() {
                         <span className="text-xs font-mono font-bold bg-muted px-2 py-1 border-2 border-border ml-2 flex items-center gap-2">
                           <span className="text-primary">{share.rawPasskey}</span>
                           <button
-                            onClick={() => navigator.clipboard.writeText(share.rawPasskey!)}
+                            onClick={() => {
+                              navigator.clipboard.writeText(share.rawPasskey!);
+                              setCopiedId(share.id);
+                              setTimeout(() => setCopiedId(null), 1500);
+                            }}
                             className="p-1 hover:bg-background transition-colors"
                             title="Copy Passcode"
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            {copiedId === share.id ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                         </span>
                       )}
