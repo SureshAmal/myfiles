@@ -1,119 +1,119 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", var(--font-geist-sans), Helvetica, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+    --font-sans: "Inter", var(--font-geist-sans), Helvetica, sans-serif;
+    --font-mono: var(--font-geist-mono), monospace;
 
-  /* Colors */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+    /* Colors */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
 
-  /* Radius */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius);
-  --radius-lg: var(--radius-lg);
-  --radius-xl: var(--radius-xl);
-  --radius-full: var(--radius-full);
+    /* Radius */
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius);
+    --radius-lg: var(--radius-lg);
+    --radius-xl: var(--radius-xl);
+    --radius-full: var(--radius-full);
 }
 
 :root {
-  /* 1. Background */
-  --background: #FEF3C7; /* Soft Cream */
-  /* 2. Foreground / Text / Border */
-  --foreground: #1E1B4B; /* Deep Navy */
-  /* 3. Primary */
-  --primary: #EA580C; /* Vibrant Orange */
-  --primary-foreground: #FEF3C7;
-  /* 4. Secondary */
-  --secondary: #DB2777; /* Hot Pink */
-  --secondary-foreground: #FEF3C7;
-  /* 5. Accent */
-  --accent: #0D9488; /* Teal */
-  --accent-foreground: #FEF3C7;
-  
-  /* Variations using the 5 colors */
-  --muted: #FDE68A;
-  --muted-foreground: #4338CA;
-  --destructive: #EF4444;
-  --destructive-foreground: #FEF3C7;
-  --border: #1E1B4B;
-  --input: #1E1B4B;
-  --ring: #EA580C;
-  
-  --radius-sm: 0;
-  --radius: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --radius-full: 9999px;
+    /* 1. Background */
+    --background: #F2FOEF; /* Soft Cream */
+    /* 2. Foreground / Text / Border */
+    --foreground: #1e1b4b; /* Deep Navy */
+    /* 3. Primary */
+    --primary: #ea580c; /* Vibrant Orange */
+    --primary-foreground: #fef3c7;
+    /* 4. Secondary */
+    --secondary: #db2777; /* Hot Pink */
+    --secondary-foreground: #fef3c7;
+    /* 5. Accent */
+    --accent: #0d9488; /* Teal */
+    --accent-foreground: #fef3c7;
+
+    /* Variations using the 5 colors */
+    --muted: #fde68a;
+    --muted-foreground: #4338ca;
+    --destructive: #ef4444;
+    --destructive-foreground: #fef3c7;
+    --border: #1e1b4b;
+    --input: #1e1b4b;
+    --ring: #ea580c;
+
+    --radius-sm: 0;
+    --radius: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    --radius-full: 100px;
 }
 
 .dark {
-  /* 1. Background */
-  --background: #1E1B4B; /* Deep Navy */
-  /* 2. Foreground / Text / Border */
-  --foreground: #FEF3C7; /* Soft Cream */
-  /* 3. Primary */
-  --primary: #F59E0B; /* Vibrant Yellow */
-  --primary-foreground: #1E1B4B;
-  /* 4. Secondary */
-  --secondary: #EC4899; /* Bright Pink */
-  --secondary-foreground: #1E1B4B;
-  /* 5. Accent */
-  --accent: #06B6D4; /* Cyan */
-  --accent-foreground: #1E1B4B;
-  
-  /* Variations using the 5 colors */
-  --muted: #312E81;
-  --muted-foreground: #FDE68A;
-  --destructive: #F87171;
-  --destructive-foreground: #1E1B4B;
-  --border: #FEF3C7;
-  --input: #FEF3C7;
-  --ring: #F59E0B;
+    /* 1. Background */
+    --background: #1e1b4b; /* Deep Navy */
+    /* 2. Foreground / Text / Border */
+    --foreground: #fef3c7; /* Soft Cream */
+    /* 3. Primary */
+    --primary: #f59e0b; /* Vibrant Yellow */
+    --primary-foreground: #1e1b4b;
+    /* 4. Secondary */
+    --secondary: #ec4899; /* Bright Pink */
+    --secondary-foreground: #1e1b4b;
+    /* 5. Accent */
+    --accent: #06b6d4; /* Cyan */
+    --accent-foreground: #1e1b4b;
+
+    /* Variations using the 5 colors */
+    --muted: #312e81;
+    --muted-foreground: #fde68a;
+    --destructive: #f87171;
+    --destructive-foreground: #1e1b4b;
+    --border: #fef3c7;
+    --input: #fef3c7;
+    --ring: #f59e0b;
 }
 
 @layer base {
-  * {
-    border-color: var(--border);
-    outline-color: var(--ring);
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    @apply font-sans antialiased;
-  }
+    * {
+        border-color: var(--border);
+        outline-color: var(--ring);
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        @apply font-sans antialiased;
+    }
 
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--muted-foreground);
-    border-radius: var(--radius-full);
-    opacity: 0.5;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--foreground);
-  }
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--muted-foreground) transparent;
-  }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--muted-foreground);
+        border-radius: var(--radius-full);
+        opacity: 0.5;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--foreground);
+    }
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--muted-foreground) transparent;
+    }
 }
