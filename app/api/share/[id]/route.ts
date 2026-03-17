@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import * as bcrypt from "bcrypt";
 import { minioClient, BUCKET_NAME } from "@/lib/minio";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function GET(
   request: Request,
@@ -84,14 +86,16 @@ export async function POST(
     // Generate Presigned URLs valid for 1 hour
     const downloadLinks = await Promise.all(
       share.files.map(async (file: any) => {
-        const url = await minioClient.presignedGetObject(
-          BUCKET_NAME,
-          file.minioKey,
-          60 * 60, // 1 hour expiry
-          {
-            "response-content-disposition": `attachment; filename="${file.originalName}"`,
-          }
-        );
+        const command = new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: file.minioKey,
+          ResponseContentDisposition: `attachment; filename="${file.originalName}"`,
+        });
+        
+        const url = await getSignedUrl(minioClient, command, {
+          expiresIn: 3600, // 1 hour expiry
+        });
+
         return {
           id: file.id,
           name: file.originalName,

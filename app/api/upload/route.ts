@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import * as bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
 import { minioClient, BUCKET_NAME, initializeMinio } from "@/lib/minio";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 // Limits
 const MAX_GLOBAL_SIZE = 1 * 1024 * 1024 * 1024; // 1 GB
@@ -93,10 +94,15 @@ export async function POST(request: Request) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const minioKey = `${share.id}/${nanoid()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; // Sanitize name
       
-      // Upload to MinIO
-      await minioClient.putObject(BUCKET_NAME, minioKey, buffer, buffer.length, {
-        "Content-Type": file.type || "application/octet-stream",
-      });
+      // Upload to MinIO using S3 SDK
+      await minioClient.send(
+        new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: minioKey,
+          Body: buffer,
+          ContentType: file.type || "application/octet-stream",
+        })
+      );
 
       // Save to DB
       await prisma.file.create({
