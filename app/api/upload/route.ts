@@ -71,10 +71,10 @@ export async function POST(request: Request) {
     }
 
     // 4. Generate Passkey and Share ID
-    const rawPasskey = nanoid(8); // e.g. "aBcDeFgH"
+    const rawPasskey = nanoid(8); // Fixed 8 characters
     const hashedPasskey = await bcrypt.hash(rawPasskey, 10);
     const shortId = nanoid(6); // e.g. "xYz123"
-    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000); // +12 hours
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // 5. Create Share in DB
     const share = await prisma.share.create({

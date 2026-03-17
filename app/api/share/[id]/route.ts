@@ -87,7 +87,10 @@ export async function POST(
         const url = await minioClient.presignedGetObject(
           BUCKET_NAME,
           file.minioKey,
-          60 * 60 // 1 hour expiry
+          60 * 60, // 1 hour expiry
+          {
+            "response-content-disposition": `attachment; filename="${file.originalName}"`,
+          }
         );
         return {
           id: file.id,

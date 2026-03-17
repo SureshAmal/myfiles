@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { FileText } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface ShareData {
   size: number;
@@ -91,7 +93,11 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4">
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/30 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md bg-background border border-border rounded-lg p-6 shadow-sm">
         <h1 className="text-2xl font-semibold mb-1 text-foreground">
           Download Files
@@ -151,14 +157,19 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                   <a
                     href={file.url}
                     download={file.name}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-between p-3 bg-muted rounded-sm
                                border border-border text-foreground no-underline
                                hover:bg-accent hover:text-accent-foreground transition-colors
                                focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
                   >
-                    <span className="truncate max-w-[80%]">{file.name}</span>
+                    <div className="flex items-center gap-2 overflow-hidden w-full pr-2">
+                       <FileText className="h-4 w-4 text-primary shrink-0 opacity-70" />
+                       <span className="truncate max-w-full">{file.name}</span>
+                    </div>
                     <span className="text-xs text-primary font-semibold py-1 px-2
-                                     bg-background rounded-sm shrink-0">
+                                     bg-background rounded-sm border border-border shrink-0">
                       Download
                     </span>
                   </a>
