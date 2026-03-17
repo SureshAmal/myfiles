@@ -5,7 +5,7 @@
 echo "Starting MinIO Server..."
 export MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-myfilesadmin}
 export MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-myfilespassword123}
-minio server /app/minio_data --console-address ":9001" &
+minio server /app/minio_storage --console-address ":9001" &
 
 # Wait for MinIO to initialize (optional but good practice)
 sleep 3
