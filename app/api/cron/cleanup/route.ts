@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { minioClient, BUCKET_NAME } from "@/lib/minio";
-import { DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function DELETE(request: Request) {
   try {
@@ -26,16 +26,18 @@ export async function DELETE(request: Request) {
 
     // 2. Delete files from MinIO
     for (const share of expiredShares as any[]) {
-      const objectsList = share.files.map((file: any) => ({ Key: file.minioKey }));
-      
-      if (objectsList.length > 0) {
-        await minioClient.send(
-          new DeleteObjectsCommand({
-            Bucket: BUCKET_NAME,
-            Delete: { Objects: objectsList },
-          })
-        );
-        deletedFilesCount += objectsList.length;
+      for (const file of share.files) {
+        try {
+          await minioClient.send(
+            new DeleteObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: file.minioKey,
+            })
+          );
+          deletedFilesCount++;
+        } catch (err) {
+          console.error(`Failed to delete expired object: ${file.minioKey}`, err);
+        }
       }
     }
 
