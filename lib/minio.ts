@@ -28,7 +28,11 @@ export async function initializeMinio() {
   try {
     await minioClient.send(new HeadBucketCommand({ Bucket: BUCKET_NAME }))
   } catch (error: any) {
-    if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+    if (
+      error.name === 'NotFound' ||
+      error.$metadata?.httpStatusCode === 404 ||
+      (error.name === 'UnknownError' && error.message === 'Unknown')
+    ) {
       console.log(`Bucket ${BUCKET_NAME} does not exist. Creating...`)
       try {
         await minioClient.send(new CreateBucketCommand({ Bucket: BUCKET_NAME }))
