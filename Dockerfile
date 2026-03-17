@@ -7,9 +7,6 @@ COPY package.json bun.lock ./
 COPY prisma ./prisma
 
 # Install dependencies and generate Prisma client
-RUN apt-get update -qq && \
-    apt-get install -y python3 pkg-config build-essential && \
-    rm -rf /var/lib/apt/lists/*
 RUN bun install --frozen-lockfile
 RUN bunx prisma generate
 
