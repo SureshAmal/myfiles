@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-    --font-sans: "Inter", var(--font-geist-sans), Helvetica, sans-serif;
-    --font-mono: var(--font-geist-mono), monospace;
+    --font-sans:
+        var(--font-inter), "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono:
+        var(--font-jetbrains-mono), "Cascadia Code", "Fira Code", "Consolas",
+        monospace;
 
-    /* Colors */
+    /* Color tokens — resolved from CSS custom properties */
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-primary: var(--primary);
@@ -21,82 +24,78 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
-    /* Radius */
-    --radius-sm: var(--radius-sm);
-    --radius-md: var(--radius);
-    --radius-lg: var(--radius-lg);
-    --radius-xl: var(--radius-xl);
-    --radius-full: var(--radius-full);
+    /* Sharp corners — VSCode style */
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-full: 9999px;
 }
 
+/* ── Light theme (VSCode Light+) ─────────────────────────────────────── */
 :root {
-    /* 1. Background */
-    --background: #F2FOEF; /* Soft Cream */
-    /* 2. Foreground / Text / Border */
-    --foreground: #1e1b4b; /* Deep Navy */
-    /* 3. Primary */
-    --primary: #ea580c; /* Vibrant Orange */
-    --primary-foreground: #fef3c7;
-    /* 4. Secondary */
-    --secondary: #db2777; /* Hot Pink */
-    --secondary-foreground: #fef3c7;
-    /* 5. Accent */
-    --accent: #0d9488; /* Teal */
-    --accent-foreground: #fef3c7;
+    --background: #ffffff;
+    --foreground: #1e1e1e;
 
-    /* Variations using the 5 colors */
-    --muted: #fde68a;
-    --muted-foreground: #4338ca;
-    --destructive: #ef4444;
-    --destructive-foreground: #fef3c7;
-    --border: #1e1b4b;
-    --input: #1e1b4b;
-    --ring: #ea580c;
+    --primary: #0078d4; /* VS Code button blue          */
+    --primary-foreground: #ffffff;
 
-    --radius-sm: 0;
-    --radius: 0;
-    --radius-lg: 0;
-    --radius-xl: 0;
-    --radius-full: 100px;
+    --secondary: #7b3db1; /* VS Code purple accent        */
+    --secondary-foreground: #ffffff;
+
+    --accent: #007d7d; /* VS Code teal                 */
+    --accent-foreground: #ffffff;
+
+    --muted: #f3f3f3; /* VS Code sidebar / panel bg   */
+    --muted-foreground: #6e6e6e; /* VS Code comment / hint text  */
+
+    --destructive: #cd3131; /* VS Code error red            */
+    --destructive-foreground: #ffffff;
+
+    --border: #d4d4d4; /* VS Code panel border         */
+    --input: #d4d4d4;
+    --ring: #0078d4;
 }
 
+/* ── Dark theme (VSCode Dark+) ───────────────────────────────────────── */
 .dark {
-    /* 1. Background */
-    --background: #1e1b4b; /* Deep Navy */
-    /* 2. Foreground / Text / Border */
-    --foreground: #fef3c7; /* Soft Cream */
-    /* 3. Primary */
-    --primary: #f59e0b; /* Vibrant Yellow */
-    --primary-foreground: #1e1b4b;
-    /* 4. Secondary */
-    --secondary: #ec4899; /* Bright Pink */
-    --secondary-foreground: #1e1b4b;
-    /* 5. Accent */
-    --accent: #06b6d4; /* Cyan */
-    --accent-foreground: #1e1b4b;
+    --background: #1e1e1e; /* VS Code editor background    */
+    --foreground: #d4d4d4; /* VS Code default text         */
 
-    /* Variations using the 5 colors */
-    --muted: #312e81;
-    --muted-foreground: #fde68a;
-    --destructive: #f87171;
-    --destructive-foreground: #1e1b4b;
-    --border: #fef3c7;
-    --input: #fef3c7;
-    --ring: #f59e0b;
+    --primary: #0078d4; /* VS Code button blue          */
+    --primary-foreground: #ffffff;
+
+    --secondary: #c586c0; /* VS Code keyword purple       */
+    --secondary-foreground: #1e1e1e;
+
+    --accent: #4ec9b0; /* VS Code type teal            */
+    --accent-foreground: #1e1e1e;
+
+    --muted: #252526; /* VS Code sidebar background   */
+    --muted-foreground: #808080; /* VS Code line numbers / hints */
+
+    --destructive: #f44747; /* VS Code error squiggle red   */
+    --destructive-foreground: #ffffff;
+
+    --border: #3e3e42; /* VS Code panel border         */
+    --input: #3c3c3c;
+    --ring: #0078d4;
 }
 
+/* ── Base layer ──────────────────────────────────────────────────────── */
 @layer base {
     * {
         border-color: var(--border);
         outline-color: var(--ring);
     }
+
     body {
         background-color: var(--background);
         color: var(--foreground);
         @apply font-sans antialiased;
     }
 
-    /* Custom Scrollbar */
+    /* Thin, VSCode-style scrollbar */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -105,15 +104,13 @@
         background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-        background: var(--muted-foreground);
-        border-radius: var(--radius-full);
-        opacity: 0.5;
+        background: var(--border);
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--foreground);
+        background: var(--muted-foreground);
     }
     * {
         scrollbar-width: thin;
-        scrollbar-color: var(--muted-foreground) transparent;
+        scrollbar-color: var(--border) transparent;
     }
 }

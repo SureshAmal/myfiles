@@ -32,6 +32,7 @@ export async function GET(
           id: f.id,
           name: f.originalName,
           size: f.size,
+          mimeType: f.mimeType,
         })),
       },
     });
@@ -92,6 +93,8 @@ export async function POST(
         return {
           id: file.id,
           name: file.originalName,
+          size: file.size,
+          mimeType: file.mimeType,
           url,
         };
       }),
