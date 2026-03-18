@@ -114,3 +114,51 @@
         scrollbar-color: var(--border) transparent;
     }
 }
+
+/* ── File Pilot-inspired micro-animations ─────────────────────────────── */
+
+@keyframes fp-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fp-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(7px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fp-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Row entrance — used on every <tr> / list row */
+.fp-row-in {
+    animation: fp-row-in 110ms ease-out both;
+}
+
+/* Card entrance — used on share cards and grid file cards */
+.fp-card-in {
+    animation: fp-card-in 160ms ease-out both;
+}
+
+/* Plain fade — used on view-mode crossfade container */
+.fp-fade-in {
+    animation: fp-fade-in 120ms ease-out both;
+}

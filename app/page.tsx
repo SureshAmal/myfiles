@@ -11,6 +11,7 @@ import {
   Check,
   AlertTriangle,
   FolderOpen,
+  Search,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -90,6 +91,7 @@ export default function Home() {
   const [activeShares, setActiveShares] = useState<Share[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [stagedViewMode, setStagedViewMode] = useState<"grid" | "list">("list");
+  const [stagedFilter, setStagedFilter] = useState("");
 
   const [copiedPasskeyId, setCopiedPasskeyId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
@@ -354,12 +356,35 @@ export default function Home() {
             ) : (
               <div className="flex flex-col flex-1 min-h-0">
                 {/* Toolbar */}
-                <div className="shrink-0 flex justify-between items-center px-3 py-2 border-b-2 border-border bg-muted/20 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  <span>
-                    {files.length} file{files.length !== 1 && "s"} •{" "}
-                    {totalStagedMB} / 100 MB
+                <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b-2 border-border bg-muted/20 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  {/* Filter input */}
+                  <div className="relative flex items-center flex-1 min-w-0">
+                    <Search className="absolute left-2 h-3 w-3 text-muted-foreground pointer-events-none shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Filter…"
+                      value={stagedFilter}
+                      onChange={(e) => setStagedFilter(e.target.value)}
+                      className="w-full pl-6 pr-6 py-1 text-[11px] bg-background border-2 border-border focus:border-primary focus:outline-none font-mono placeholder:text-muted-foreground/40 transition-colors"
+                    />
+                    {stagedFilter && (
+                      <button
+                        onClick={() => setStagedFilter("")}
+                        className="absolute right-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Clear filter"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
+                  {/* Count + size */}
+                  <span className="shrink-0 text-[10px] hidden sm:block">
+                    {stagedFilter
+                      ? `${files.filter((f) => f.name.toLowerCase().includes(stagedFilter.toLowerCase())).length}/${files.length}`
+                      : `${files.length} file${files.length !== 1 ? "s" : ""}`}{" "}
+                    • {totalStagedMB} MB
                   </span>
-                  <div className="flex border-2 border-border">
+                  <div className="flex border-2 border-border shrink-0">
                     <button
                       onClick={() => setStagedViewMode("grid")}
                       className={`p-1.5 transition-colors ${
@@ -387,73 +412,102 @@ export default function Home() {
 
                 {/* File list */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-3">
-                  {stagedViewMode === "grid" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                      {files.map((file, i) => (
-                        <div
-                          key={`${file.name}-${i}`}
-                          className="group relative flex flex-col items-center justify-center p-3 h-28 bg-background border-2 border-border hover:border-primary transition-colors"
-                        >
-                          <FileText
-                            className="h-8 w-8 mb-2 text-primary shrink-0"
-                            strokeWidth={1.5}
-                          />
-                          <span
-                            className="text-[11px] font-bold text-center w-full truncate px-1"
-                            title={file.name}
-                          >
-                            {file.name}
+                  {(() => {
+                    // Build filtered list while preserving original indices for removal
+                    const filtered = files
+                      .map((file, originalIdx) => ({ file, originalIdx }))
+                      .filter(({ file }) =>
+                        stagedFilter
+                          ? file.name
+                              .toLowerCase()
+                              .includes(stagedFilter.toLowerCase())
+                          : true,
+                      );
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="flex items-center justify-center h-full py-8 text-muted-foreground/30 pointer-events-none select-none">
+                          <span className="text-[11px] font-black uppercase tracking-widest">
+                            No match
                           </span>
-                          <span className="text-[10px] text-muted-foreground mt-0.5 font-mono">
-                            {formatSize(file.size)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile(i)}
-                            className="absolute -top-2 -right-2 h-5 w-5 bg-destructive text-destructive-foreground border-2 border-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-10"
-                            aria-label={`Remove ${file.name}`}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1.5">
-                      {files.map((file, i) => (
-                        <div
-                          key={`${file.name}-${i}`}
-                          className="group flex items-center justify-between p-2.5 bg-background border-2 border-border hover:border-primary transition-colors"
-                        >
-                          <div className="flex items-center gap-2 overflow-hidden">
+                      );
+                    }
+
+                    return stagedViewMode === "grid" ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {filtered.map(({ file, originalIdx }, displayIdx) => (
+                          <div
+                            key={`${file.name}-${originalIdx}`}
+                            className="fp-card-in group relative flex flex-col items-center justify-center p-3 h-28 bg-background border-2 border-border hover:border-primary transition-colors"
+                            style={{
+                              animationDelay: `${Math.min(displayIdx * 15, 200)}ms`,
+                            }}
+                          >
                             <FileText
-                              className="h-4 w-4 text-primary shrink-0"
+                              className="h-8 w-8 mb-2 text-primary shrink-0"
                               strokeWidth={1.5}
                             />
                             <span
-                              className="text-xs font-bold truncate"
+                              className="text-[11px] font-bold text-center w-full truncate px-1"
                               title={file.name}
                             >
                               {file.name}
                             </span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0 ml-2">
-                            <span className="text-[10px] text-muted-foreground font-mono">
+                            <span className="text-[10px] text-muted-foreground mt-0.5 font-mono">
                               {formatSize(file.size)}
                             </span>
                             <button
                               type="button"
-                              onClick={() => handleRemoveFile(i)}
-                              className="h-5 w-5 bg-destructive text-destructive-foreground border-2 border-destructive flex items-center justify-center transition-all hover:bg-secondary hover:border-secondary"
+                              onClick={() => handleRemoveFile(originalIdx)}
+                              className="absolute -top-2 -right-2 h-5 w-5 bg-destructive text-destructive-foreground border-2 border-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-10"
                               aria-label={`Remove ${file.name}`}
                             >
                               <X className="h-3 w-3" />
                             </button>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1.5">
+                        {filtered.map(({ file, originalIdx }, displayIdx) => (
+                          <div
+                            key={`${file.name}-${originalIdx}`}
+                            className="fp-row-in group flex items-center justify-between p-2.5 bg-background border-2 border-border hover:border-primary transition-[border-color] duration-[60ms]"
+                            style={{
+                              animationDelay: `${Math.min(displayIdx * 8, 160)}ms`,
+                            }}
+                          >
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <FileText
+                                className="h-4 w-4 text-primary shrink-0"
+                                strokeWidth={1.5}
+                              />
+                              <span
+                                className="text-xs font-bold truncate"
+                                title={file.name}
+                              >
+                                {file.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <span className="text-[10px] text-muted-foreground font-mono">
+                                {formatSize(file.size)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFile(originalIdx)}
+                                className="h-5 w-5 bg-destructive text-destructive-foreground border-2 border-destructive flex items-center justify-center transition-all hover:bg-secondary hover:border-secondary"
+                                aria-label={`Remove ${file.name}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -492,7 +546,7 @@ export default function Home() {
 
               {/* Cards grid — 1 col default, 2 cols on XL */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                {activeShares.map((share) => {
+                {activeShares.map((share, shareIdx) => {
                   const fileCount = share.files?.length || 0;
                   const formattedDate = new Date(
                     share.createdAt,
@@ -510,11 +564,14 @@ export default function Home() {
                   return (
                     <div
                       key={share.id}
-                      className={`flex flex-col border-2 transition-colors ${
+                      className={`fp-card-in flex flex-col border-2 transition-colors ${
                         isExpired
                           ? "bg-muted/30 border-border/50 opacity-60 grayscale"
                           : "bg-background border-border"
                       }`}
+                      style={{
+                        animationDelay: `${Math.min(shareIdx * 60, 360)}ms`,
+                      }}
                     >
                       {/* ── Card top row ── */}
                       <div className="flex flex-wrap items-start justify-between gap-3 p-4">

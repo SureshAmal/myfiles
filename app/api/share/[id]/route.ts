@@ -79,13 +79,13 @@ export async function POST(
       return NextResponse.json({ error: "Invalid passkey" }, { status: 401 });
     }
 
-    // Generate Presigned URLs valid for 1 hour
+    // Generate Presigned URLs valid for 3 hours
     const downloadLinks = await Promise.all(
       share.files.map(async (file) => {
         const url = await getMinioPublicClient().presignedGetObject(
           BUCKET_NAME,
           file.minioKey,
-          60 * 60, // 1 hour expiry
+          3 * 60 * 60, // 3 hour expiry
           {
             "response-content-disposition": `attachment; filename="${file.originalName}"`,
           },
